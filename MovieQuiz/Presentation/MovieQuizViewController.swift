@@ -5,14 +5,12 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
-    
-    var polsovatel : Bool = true
-    
-    @IBAction func yesButtonClicked(_ sender: UIButton) {
+        
+    @IBAction private func yesButtonClicked(_ sender: UIButton) {
         checkAnswer(userAnswer: true)
     }
     
-    @IBAction func noButtonClicked(_ sender: UIButton) {
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
         checkAnswer(userAnswer: false)
     }
     
@@ -64,7 +62,7 @@ final class MovieQuizViewController: UIViewController {
         
         let image = UIImage(named: model.image) ?? UIImage() //или пустая картинка
         let question = model.text
-        let questionNumber = "\(currentQuestionIndex + 1) / \(questions.count)"
+        let questionNumber = "\(currentQuestionIndex + 1)/\(questions.count)"
         
         return QuizStepViewModel(image: image, question: question, questionNumber: questionNumber)
     }
