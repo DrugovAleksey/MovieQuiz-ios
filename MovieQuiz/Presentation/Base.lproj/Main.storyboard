@@ -44,6 +44,7 @@
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="VdL-UI-tIj">
                                         <rect key="frame" x="0.0" y="43.666666666666686" width="350" height="525"/>
                                         <color key="backgroundColor" name="YP White (iOS)"/>
+                                        <accessibility key="accessibilityConfiguration" identifier="Poster"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="VdL-UI-tIj" secondAttribute="height" multiplier="2:3" id="o8f-qi-1PL"/>
                                         </constraints>
@@ -89,6 +90,7 @@
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A9B-Na-5ZQ">
                                                 <rect key="frame" x="184.66666666666663" y="0.0" width="165.33333333333337" height="60"/>
                                                 <color key="backgroundColor" name="YP White (iOS)"/>
+                                                <accessibility key="accessibilityConfiguration" identifier="Да"/>
                                                 <fontDescription key="fontDescription" name="YSDisplay-Bold" family="YS Display" pointSize="20"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
                                                 <state key="normal" title="Да">
@@ -114,6 +116,10 @@
                                     <constraint firstItem="OKk-k2-6VY" firstAttribute="top" secondItem="VdL-UI-tIj" secondAttribute="bottom" constant="19.999999999999886" id="rX3-WN-YtD"/>
                                 </constraints>
                             </stackView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="qd5-3n-0Di">
+                                <rect key="frame" x="20" y="412" width="350" height="20"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YP Black (iOS)"/>
@@ -125,6 +131,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="qd5-3n-0Di" id="Nz2-Pg-tHT"/>
                         <outlet property="counterLabel" destination="qR6-qQ-gLH" id="nB7-uc-BFW"/>
                         <outlet property="imageView" destination="VdL-UI-tIj" id="8vY-KI-0JX"/>
                         <outlet property="textLabel" destination="OKk-k2-6VY" id="KjJ-3w-LB0"/>

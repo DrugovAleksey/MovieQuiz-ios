@@ -2,6 +2,8 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
+    
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var counterLabel: UILabel!
@@ -20,7 +22,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var correctAnswers = 0
     
     private let questionsAmount: Int = 10 // общее количество вопросов квиза
-    private var questionFactory: QuestionFactoryProtocol? // фабрика вопросов, контроллер будет обращаться за вопросами к ней
+    private var questionFactory: QuestionFactory? // фабрика вопросов, контроллер будет обращаться за вопросами к ней
     private var currentQuestion: QuizQuestion? // вопрос который видит пользователь
     
     private var alertPresenter = AlertPresenter()
@@ -30,14 +32,37 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let questionFactory = QuestionFactory()
-        questionFactory.delegate = self
-        self.questionFactory = questionFactory
-        
-        questionFactory.requestNextQuestion() // запрос первого вопроса
-        
+       
+       imageView.layer.cornerRadius = 20
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        statisticService = StatisticService()
 
+        showLoadingIndicator()
+        questionFactory?.loadData()
+    }
+    
+    // MARK: - Функция загрузки данных с сервера
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
+    }
+    
+    // MARK: - Функция вылаи ошибки при загрузке
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмем в качестве сообщения описание ошибки
+    }
+    
+    
+    // MARK: - Функция индикатора загрузки
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // включаем анимацию
+    }
+    
+    // MARK: - Функция скрытия индикатора загрузки
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = true
+        activityIndicator.startAnimating()
     }
     
     // MARK: - QuestionFactoryDelegate (Делегат)
@@ -53,6 +78,24 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         DispatchQueue.main.async{ [weak self] in
             self?.show(quiz: viewModel)
         }
+    }
+    
+    // Функция ошибки сети
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        
+        let model = AlertModel(
+            title: "Ошибка сети",
+            message: message,
+            buttonText: "Попробовать еще раз") { [weak self] in
+                guard let self = self else {return}
+                
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                
+                self.questionFactory?.requestNextQuestion()
+            }
+        alertPresenter.show(in: self, model: model)
     }
     
     // вывод ошибки в виде алерта
@@ -74,13 +117,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        
-        let image = UIImage(named: model.image) ?? UIImage() //или пустая картинка
-        let question = model.text
-        let questionNumber = "\(currentQuestionIndex + 1)/\(questionFactory?.questionCount() ?? questionsAmount)"
-        
-        return QuizStepViewModel(image: image, question: question, questionNumber: questionNumber)
-    }
+        return QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
+            question: model.text,
+            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
+    } 
     
     func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -99,10 +140,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         if isCorrect == true {
             correctAnswers += 1
         }
-        
-        // Сохраняем прогресс после каждого ответа
-//            statisticService.store(correct: correctAnswers, total: currentQuestionIndex + 1)
-//            
+            
         // красим рамку
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect
@@ -120,7 +158,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.borderColor = UIColor(resource: .ypBlackIOS).cgColor
         
         //проверяем на окончание вопросов
-        if currentQuestionIndex < (questionFactory?.questionCount())! - 1 {
+        if currentQuestionIndex < (questionsAmount) - 1 {
             currentQuestionIndex += 1
 
             questionFactory?.requestNextQuestion() // запрашиваем следующий вопрос через фабрику
@@ -132,36 +170,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     
     private func showQuizFinished() {
-//        было
-//        let alert = UIAlertController(
-//            title: "Раунд окончен",
-//            message: "Ваш результат: \(correctAnswers)/\(questionFactory!.questionCount())",
-//            preferredStyle: .alert
-//        )
-//        
-//        // Кнопка «Повторить»
-//        alert.addAction(UIAlertAction(
-//            title: "Сыграть ещё раз",
-//            style: .default
-//        ) { [weak self] _ in
-//            guard let self = self else {return}
-//            self.restartQuiz() })
-//        
-//        // Кнопка «Закрыть»
-//        alert.addAction(UIAlertAction(
-//            title: "Закрыть",
-//            style: .cancel
-//        ))
-//        
-//        present(alert, animated: true)
         
-//        стало
-        guard let questionCount = questionFactory?.questionCount() else {
-            showError(message: "Не получили количетво вопросов")
-            return
-        }
-        
-        let message = "Ваш результат:  \(correctAnswers)/\(questionCount)\n" +
+        let message = "Ваш результат:  \(correctAnswers)/\(questionsAmount)\n" +
             "Количество сыграных квизов:\(statisticService.gamesCount)\n" +
         "Рекорд: \(statisticService.bestGame.correct)/\(statisticService.bestGame.total) \(statisticService.bestGame.date.dateTimeString)\n" +
             "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
@@ -176,7 +186,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter.show(in: self, model: model)
         
         //сохраним результаты
-        statisticService.store(correct: correctAnswers, total: questionCount)
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
     }
     
     private func restartQuiz() {
